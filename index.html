@@ -265,9 +265,23 @@
 
     #grid {
       display: grid;
-      grid-template-columns: repeat(8, var(--cs, 43px));
-      grid-template-rows: repeat(8, var(--cs, 43px));
       gap: 2px;
+    }
+    #level-progress {
+      width: 100%;
+      max-width: 380px;
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      margin: -2px 0 6px;
+      overflow: hidden;
+    }
+    #level-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #a855f7, #00d2ff);
+      width: 0%;
+      transition: width 0.4s;
+      border-radius: 2px;
     }
 
     .cell {
@@ -619,10 +633,15 @@
       <div class="score-value" id="score-el">0</div>
     </div>
     <div class="score-box">
+      <div class="score-label">Level</div>
+      <div class="score-value" id="level-el">1</div>
+    </div>
+    <div class="score-box">
       <div class="score-label">Best</div>
       <div class="score-value" id="best-el">0</div>
     </div>
   </div>
+  <div id="level-progress"><div id="level-bar"></div></div>
 
   <div id="grid-wrap"><div id="grid"></div></div>
 
@@ -864,7 +883,13 @@ document.getElementById('su-pw').addEventListener('keydown', e => { if (e.key ==
 /* ═══════════════════════════════════════════
    GAME
 ═══════════════════════════════════════════ */
-const N = 8;
+const LEVEL_CONFIG = [
+  { n: 5, target: 3  },   // Lv1 5×5  → 3라인 클리어로 레벨업
+  { n: 6, target: 5  },   // Lv2 6×6  → 5라인
+  { n: 7, target: 8  },   // Lv3 7×7  → 8라인
+  { n: 8, target: Infinity }, // Lv4 8×8 최종
+];
+let N = LEVEL_CONFIG[0].n;
 
 const SHAPES = [
   [[0,0]],
@@ -891,6 +916,7 @@ const COLORS = [
 ];
 
 let grid, score, best, pieces, drag, animating;
+let level, linesCleared;
 let cellEls = [];
 
 function getCellSize() {
@@ -905,6 +931,8 @@ function buildGrid() {
   const el = document.getElementById('grid');
   el.innerHTML = '';
   cellEls = [];
+  el.style.gridTemplateColumns = `repeat(${N}, var(--cs))`;
+  el.style.gridTemplateRows    = `repeat(${N}, var(--cs))`;
   for (let r = 0; r < N; r++) {
     for (let c = 0; c < N; c++) {
       const d = document.createElement('div');
@@ -961,6 +989,7 @@ async function clearLines() {
   for(let c=0;c<N;c++) if(grid.every(row=>row[c]!==null)) fullCols.push(c);
   const total = fullRows.length+fullCols.length;
   if(!total) return 0;
+  linesCleared += total;
 
   const flashSet = new Set();
   fullRows.forEach(r=>{ for(let c=0;c<N;c++) flashSet.add(r*N+c); });
@@ -1016,6 +1045,13 @@ function updateScoreUI() {
   const bel = document.getElementById('best-el');
   sel.textContent = score;
   bel.textContent = currentUser ? best : (best > 0 ? best : '-');
+  document.getElementById('level-el').textContent = level;
+
+  const cfgIdx = Math.min(level - 1, LEVEL_CONFIG.length - 1);
+  const target = LEVEL_CONFIG[cfgIdx].target;
+  const pct = target === Infinity ? 100 : Math.min(linesCleared / target * 100, 100);
+  document.getElementById('level-bar').style.width = pct + '%';
+
   sel.classList.remove('bump');
   void sel.offsetWidth;
   sel.classList.add('bump');
@@ -1118,6 +1154,36 @@ function updateDrag(cx, cy) {
   renderGrid(cells,ar,ac,color,valid);
 }
 
+async function levelUp() {
+  animating = true;
+  const el = document.getElementById('combo-text');
+
+  el.textContent = 'LEVEL UP!';
+  el.classList.remove('show'); void el.offsetWidth;
+  el.style.top = (window.innerHeight * 0.38) + 'px';
+  el.classList.add('show');
+  await sleep(900);
+
+  level++;
+  linesCleared = 0;
+  N = LEVEL_CONFIG[Math.min(level - 1, LEVEL_CONFIG.length - 1)].n;
+
+  el.textContent = `LV ${level}  ${N}×${N}`;
+  el.classList.remove('show'); void el.offsetWidth;
+  el.style.top = (window.innerHeight * 0.38) + 'px';
+  el.classList.add('show');
+  await sleep(1000);
+
+  grid = Array.from({length: N}, () => Array(N).fill(null));
+  buildGrid();
+  applyCellSize();
+  pieces = [0,1,2].map(() => randomPiece());
+  renderGrid(); renderPieces(); updateScoreUI();
+  animating = false;
+
+  if (isGameOver()) { await sleep(300); showGameOver(); }
+}
+
 async function dropPiece() {
   if(!drag||animating) return;
   const {i,piece,ar,ac,valid}=drag;
@@ -1132,6 +1198,12 @@ async function dropPiece() {
   if(pieces.every(p=>p===null)) pieces=[0,1,2].map(()=>randomPiece());
   renderGrid(); renderPieces();
   animating=false;
+
+  const cfgIdx = Math.min(level - 1, LEVEL_CONFIG.length - 1);
+  if (level < LEVEL_CONFIG.length && linesCleared >= LEVEL_CONFIG[cfgIdx].target) {
+    await levelUp();
+    return;
+  }
   if(isGameOver()){ await sleep(300); showGameOver(); }
 }
 
@@ -1186,7 +1258,11 @@ function showGameOver() {
 }
 
 function startGame() {
+  level = 1;
+  linesCleared = 0;
+  N = LEVEL_CONFIG[0].n;
   grid=Array.from({length:N},()=>Array(N).fill(null));
+  buildGrid();
   score=0;
   best = currentUser ? (currentUser.best||0) : 0;
   pieces=[0,1,2].map(()=>randomPiece());

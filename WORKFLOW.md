@@ -169,3 +169,8 @@ GitHub API로 `fixup719/crumblox-claude` repo 생성, index.html push, Pages 활
 
 ### [34] 금까지 내가 전달한 프롬프트와 그에 상응해서 네가 한 작업을 정리해서 WORKFLOW.md로 저장해줘. 프롬프트는 그대로 써야하고 작업은 요약해서 작성해주면 돼. 이 내용을 CLAUDE.md에 반영해서 앞으로는 작업시 항상 WORKFLOW.md를 갱신하게 해줘. 그리고 최종적으로 git에도 올려줘
 WORKFLOW.md 작성, CLAUDE.md에 WORKFLOW 갱신 규칙 추가, 두 레포 push.
+
+---
+
+### [35] 난이도조절이 필요해보여 Level기능 도입하고 구간별로 보드 크기를 5*5부터 조금씩늘려가야할듯?
+레벨 시스템 구현 (Lv1: 5×5 → Lv2: 6×6 → Lv3: 7×7 → Lv4: 8×8). 각 레벨별 라인 클리어 목표치 달성 시 "LEVEL UP!" 애니메이션 후 보드 확장. Level 점수 박스와 레벨 프로그레스바 UI 추가.
