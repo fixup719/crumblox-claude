@@ -1000,7 +1000,6 @@ function addScore(cleared, cellCount) {
   score += cellCount + cleared*50;
 
   if (currentUser) {
-    console.log('[CRUMBLOX] score:', score, 'best:', currentUser.best, 'user:', currentUser.id);
     if (score > currentUser.best) {
       currentUser.best = score;
       uploadScore(currentUser.id, score);
