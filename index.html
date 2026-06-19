@@ -884,9 +884,9 @@ document.getElementById('su-pw').addEventListener('keydown', e => { if (e.key ==
    GAME
 ═══════════════════════════════════════════ */
 const LEVEL_CONFIG = [
-  { n: 5, target: 3  },   // Lv1 5×5  → 3라인 클리어로 레벨업
-  { n: 6, target: 5  },   // Lv2 6×6  → 5라인
-  { n: 7, target: 8  },   // Lv3 7×7  → 8라인
+  { n: 5, target: 5  },   // Lv1 5×5  → 5라인 클리어로 레벨업
+  { n: 6, target: 10 },   // Lv2 6×6  → 10라인
+  { n: 7, target: 16 },   // Lv3 7×7  → 16라인
   { n: 8, target: Infinity }, // Lv4 8×8 최종
 ];
 let N = LEVEL_CONFIG[0].n;
