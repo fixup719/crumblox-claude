@@ -689,10 +689,10 @@ function fmtTime(iso) {
 }
 
 async function uploadScore(id, best) {
-  sb.from('leaderboard')
+  const { error } = await sb.from('leaderboard')
     .upsert({ username: id, best_score: best, updated_at: new Date().toISOString() },
-             { onConflict: 'username' })
-    .catch(() => {});
+             { onConflict: 'username' });
+  if (error) console.error('[CRUMBLOX] 랭킹 저장 실패:', error.message);
 }
 
 async function openRanking() {
